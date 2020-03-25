@@ -19,15 +19,13 @@ missing_values=['?']
 potential = pd.read_csv("potential-clients.csv", index_col="ID",na_values = missing_values)
 current = pd.read_csv("current-clients.csv", index_col="ID",na_values = missing_values)
 
-# current.drop(['race','relationship','capital-gain','capital-loss'],1,inplace=True)
-
 current.dropna(inplace=True)
-# print(current.groupby('workclass').size())
+potential['workclass'].fillna('Private',inplace=True)
+potential['native-country'].fillna('United-States',inplace=True)
 
-
-# plt.show()
-
-
+potential.dropna(inplace=True)
+# print(potential.groupby('native-country').size())
+# print (potential.isnull().sum())
 
 # Feature Engineering
 
@@ -42,25 +40,25 @@ current['race_cat'] = labelencoder.fit_transform(current['race'])
 current['relationship_cat'] = labelencoder.fit_transform(current['relationship'])
 
 current=current.drop(columns = ['workclass', 'education', 'marital-status', 'occupation', 'sex',
-                                'native-country','race','relationship',])
-# current.fillna(current.mean())
+                                'native-country','race','relationship','capital-loss','capital-gain'])
 # print(current.describe())
 # print(current.columns)
-# print (current.isnull().sum())
-#
-# print(current.head(50))
+
 x = np.array(current.drop(['class'], 1))#features
 y = np.array(current['class'])#Label
 X_train, X_test, y_train, y_test = model_selection.train_test_split(x, y, test_size=0.2)
 
-
-clf = KNeighborsClassifier()
+clf = SVC()
 clf.fit(X_train,y_train)
 
 accuracy=clf.score(X_test,y_test)
-print('KNN acurecy',accuracy*100 ,'%')
+# print('SVM acurecy',accuracy*100 ,'%')
+
+pred = clf.predict(X_test)
+# print(confusion_matrix(y_test, pred))
+# print(classification_report(y_test, pred))
+
 # prepare configuration for cross validation test harness
-seed = 7
 # prepare models
 # models = []
 # models.append(('LR', LogisticRegression(max_iter=1)))
@@ -80,9 +78,7 @@ seed = 7
 #     names.append(name)
 #     msg = "%s: %f (%f)" % (name, cv_results.mean(), cv_results.std())
 #     print(msg)
-pred = clf.predict(X_test)
-print(confusion_matrix(y_test, pred))
-print(classification_report(y_test, pred))
+
 # boxplot algorithm comparison
 
 # sns.countplot(current['workclass'],label="workclasses")
@@ -99,3 +95,17 @@ print(classification_report(y_test, pred))
 # ax.set_xticklabels(names)
 # plt.savefig('Algorithm Comparison')
 # plt.show()
+
+potential['workclass_cat'] = labelencoder.fit_transform(potential['workclass'])
+potential['education_cat'] = labelencoder.fit_transform(potential['education'])
+potential['marital-status_cat'] = labelencoder.fit_transform(potential['marital-status'])
+potential['occupation_cat'] = labelencoder.fit_transform(potential['occupation'])
+potential['sex_cat'] = labelencoder.fit_transform(potential['sex'])
+potential['native-country_cat'] = labelencoder.fit_transform(potential['native-country'])
+potential['race_cat'] = labelencoder.fit_transform(potential['race'])
+potential['relationship_cat'] = labelencoder.fit_transform(potential['relationship'])
+potential=potential.drop(columns = ['workclass', 'education', 'marital-status', 'occupation', 'sex',
+                                'native-country','race','relationship','capital-loss','capital-gain'])
+
+# print(potential['workclass_cat'].head(10))
+# print(current['workclass_cat'].head(10))
