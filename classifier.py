@@ -19,17 +19,24 @@ missing_values=['?']
 potential = pd.read_csv("potential-clients.csv", index_col="ID",na_values = missing_values)
 current = pd.read_csv("current-clients.csv", index_col="ID",na_values = missing_values)
 
-current.dropna(inplace=True)
+
 potential['workclass'].fillna('Private',inplace=True)
 potential['native-country'].fillna('United-States',inplace=True)
+current['workclass'].fillna('Private',inplace=True)
+current['native-country'].fillna('United-States',inplace=True)
 
+current.dropna(inplace=True)
 potential.dropna(inplace=True)
-# print(potential.groupby('native-country').size())
-# print (potential.isnull().sum())
+new_pot=potential
+new_pot.to_csv('complete_poten')
+
+# print(current.groupby('occupation').size())
+# print (current.isnull().sum())
 
 # Feature Engineering
 
 labelencoder = LabelEncoder()
+# current file preprocessing
 current['workclass_cat'] = labelencoder.fit_transform(current['workclass'])
 current['education_cat'] = labelencoder.fit_transform(current['education'])
 current['marital-status_cat'] = labelencoder.fit_transform(current['marital-status'])
@@ -40,23 +47,66 @@ current['race_cat'] = labelencoder.fit_transform(current['race'])
 current['relationship_cat'] = labelencoder.fit_transform(current['relationship'])
 
 current=current.drop(columns = ['workclass', 'education', 'marital-status', 'occupation', 'sex',
-                                'native-country','race','relationship','capital-loss','capital-gain'])
+                                'native-country','race','relationship'],axis = 1)
+
+# potential file preprocessing
+potential['workclass_cat'] = labelencoder.fit_transform(potential['workclass'])
+potential['education_cat'] = labelencoder.fit_transform(potential['education'])
+potential['marital-status_cat'] = labelencoder.fit_transform(potential['marital-status'])
+potential['occupation_cat'] = labelencoder.fit_transform(potential['occupation'])
+potential['sex_cat'] = labelencoder.fit_transform(potential['sex'])
+potential['native-country_cat'] = labelencoder.fit_transform(potential['native-country'])
+potential['race_cat'] = labelencoder.fit_transform(potential['race'])
+potential['relationship_cat'] = labelencoder.fit_transform(potential['relationship'])
+
+potential=potential.drop(columns=['workclass', 'education', 'marital-status', 'occupation', 'sex',
+                                'native-country','race','relationship'],axis=1,)
+# potential.to_csv('complete_poten')
 # print(current.describe())
-# print(current.columns)
+# print(current.head())
+# print(potential.head())
 
-x = np.array(current.drop(['class'], 1))#features
-y = np.array(current['class'])#Label
-X_train, X_test, y_train, y_test = model_selection.train_test_split(x, y, test_size=0.2)
+# Model Building
 
-clf = SVC()
-clf.fit(X_train,y_train)
+x = np.array(current.drop(['class'], 1))# features
+y = np.array(current['class'])# Label
+# X_train, X_test, y_train, y_test = model_selection.train_test_split(x, y, test_size=0.2,stratify=y)
+X_test = potential
 
-accuracy=clf.score(X_test,y_test)
-# print('SVM acurecy',accuracy*100 ,'%')
+clf = KNeighborsClassifier()
+clf.fit(x,y)
+
+accuracy=clf.score(x,y)
+# print('KNN acurecy',accuracy*100 ,'%')
 
 pred = clf.predict(X_test)
+# print(pred)
+potential['class']=list(pred)
+potential.to_csv('newPotential.csv')
+
+new_potential = pd.read_csv("newPotential.csv", index_col="ID")
+# print(new_potential.groupby('class').size())
+# new_potential['cat_class'] = labelencoder.fit_transform(new_potential['class'])
+# print(new_potential['cat_class'])
+
+# for i in new_potential['cat_class']:
+#     if i ==1:
+#         print(i)
+for i,c in new_potential.iterrows():
+    if c['class']=='>50K':
+        high_income=c['class']
+
+        print(i,high_income)
+    else :
+        low_income=c['class']
+        # print(i,low_income)
 # print(confusion_matrix(y_test, pred))
 # print(classification_report(y_test, pred))
+
+# example_measures = np.array([[4,2,1,1,1,2,3,2,1],[4,2,1,2,2,2,3,2,1]])
+# example_measures=example_measures.reshape(len(example_measures),-1)
+# prediction = clf.predict(example_measures)
+# print(prediction)
 
 # prepare configuration for cross validation test harness
 # prepare models
@@ -96,16 +146,7 @@ pred = clf.predict(X_test)
 # plt.savefig('Algorithm Comparison')
 # plt.show()
 
-potential['workclass_cat'] = labelencoder.fit_transform(potential['workclass'])
-potential['education_cat'] = labelencoder.fit_transform(potential['education'])
-potential['marital-status_cat'] = labelencoder.fit_transform(potential['marital-status'])
-potential['occupation_cat'] = labelencoder.fit_transform(potential['occupation'])
-potential['sex_cat'] = labelencoder.fit_transform(potential['sex'])
-potential['native-country_cat'] = labelencoder.fit_transform(potential['native-country'])
-potential['race_cat'] = labelencoder.fit_transform(potential['race'])
-potential['relationship_cat'] = labelencoder.fit_transform(potential['relationship'])
-potential=potential.drop(columns = ['workclass', 'education', 'marital-status', 'occupation', 'sex',
-                                'native-country','race','relationship','capital-loss','capital-gain'])
+
 
 # print(potential['workclass_cat'].head(10))
 # print(current['workclass_cat'].head(10))
