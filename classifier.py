@@ -19,6 +19,8 @@ missing_values=['?']
 potential = pd.read_csv("potential-clients.csv", index_col="ID",na_values = missing_values)
 current = pd.read_csv("current-clients.csv", index_col="ID",na_values = missing_values)
 
+# print(current.groupby('education').size())
+# print (current.isnull().sum())
 
 potential['workclass'].fillna('Private',inplace=True)
 potential['native-country'].fillna('United-States',inplace=True)
@@ -30,37 +32,36 @@ potential.dropna(inplace=True)
 new_pot=potential
 new_pot.to_csv('complete_poten')
 
-# print(current.groupby('occupation').size())
-# print (current.isnull().sum())
+
 
 # Feature Engineering
 
 labelencoder = LabelEncoder()
 # current file preprocessing
-current['workclass_cat'] = labelencoder.fit_transform(current['workclass'])
-current['education_cat'] = labelencoder.fit_transform(current['education'])
-current['marital-status_cat'] = labelencoder.fit_transform(current['marital-status'])
-current['occupation_cat'] = labelencoder.fit_transform(current['occupation'])
-current['sex_cat'] = labelencoder.fit_transform(current['sex'])
-current['native-country_cat'] = labelencoder.fit_transform(current['native-country'])
-current['race_cat'] = labelencoder.fit_transform(current['race'])
-current['relationship_cat'] = labelencoder.fit_transform(current['relationship'])
+current['workclass'] = labelencoder.fit_transform(current['workclass'])
+current['education'] = labelencoder.fit_transform(current['education'])
+current['marital-status'] = labelencoder.fit_transform(current['marital-status'])
+current['occupation'] = labelencoder.fit_transform(current['occupation'])
+current['sex'] = labelencoder.fit_transform(current['sex'])
+current['native-country'] = labelencoder.fit_transform(current['native-country'])
+current['race'] = labelencoder.fit_transform(current['race'])
+current['relationship'] = labelencoder.fit_transform(current['relationship'])
 
-current=current.drop(columns = ['workclass', 'education', 'marital-status', 'occupation', 'sex',
-                                'native-country','race','relationship'],axis = 1)
+# current=current.drop(columns = ['workclass', 'education', 'marital-status', 'occupation', 'sex',
+#                                 'native-country','race','relationship'],axis = 1)
 
 # potential file preprocessing
-potential['workclass_cat'] = labelencoder.fit_transform(potential['workclass'])
-potential['education_cat'] = labelencoder.fit_transform(potential['education'])
-potential['marital-status_cat'] = labelencoder.fit_transform(potential['marital-status'])
-potential['occupation_cat'] = labelencoder.fit_transform(potential['occupation'])
-potential['sex_cat'] = labelencoder.fit_transform(potential['sex'])
-potential['native-country_cat'] = labelencoder.fit_transform(potential['native-country'])
-potential['race_cat'] = labelencoder.fit_transform(potential['race'])
-potential['relationship_cat'] = labelencoder.fit_transform(potential['relationship'])
+potential['workclass'] = labelencoder.fit_transform(potential['workclass'])
+potential['education'] = labelencoder.fit_transform(potential['education'])
+potential['marital-status'] = labelencoder.fit_transform(potential['marital-status'])
+potential['occupation'] = labelencoder.fit_transform(potential['occupation'])
+potential['sex'] = labelencoder.fit_transform(potential['sex'])
+potential['native-country'] = labelencoder.fit_transform(potential['native-country'])
+potential['race'] = labelencoder.fit_transform(potential['race'])
+potential['relationship'] = labelencoder.fit_transform(potential['relationship'])
 
-potential=potential.drop(columns=['workclass', 'education', 'marital-status', 'occupation', 'sex',
-                                'native-country','race','relationship'],axis=1,)
+# potential=potential.drop(columns=['workclass', 'education', 'marital-status', 'occupation', 'sex',
+#                                 'native-country','race','relationship'],axis=1,)
 # potential.to_csv('complete_poten')
 # print(current.describe())
 # print(current.head())
@@ -70,36 +71,37 @@ potential=potential.drop(columns=['workclass', 'education', 'marital-status', 'o
 
 x = np.array(current.drop(['class'], 1))# features
 y = np.array(current['class'])# Label
-# X_train, X_test, y_train, y_test = model_selection.train_test_split(x, y, test_size=0.2,stratify=y)
-X_test = potential
+X_train, X_test, y_train, y_test = model_selection.train_test_split(x, y, test_size=0.2,stratify=y)
 
 clf = KNeighborsClassifier()
-clf.fit(x,y)
+clf.fit(X_train,y_train)
 
-accuracy=clf.score(x,y)
-# print('KNN acurecy',accuracy*100 ,'%')
+accuracy=clf.score(X_test,y_test)
+print('KNN acurecy',accuracy*100 ,'%')
 
-pred = clf.predict(X_test)
-# print(pred)
+pred = clf.predict(potential)
+print(pred)
 potential['class']=list(pred)
 potential.to_csv('newPotential.csv')
 
 new_potential = pd.read_csv("newPotential.csv", index_col="ID")
 # print(new_potential.groupby('class').size())
-# new_potential['cat_class'] = labelencoder.fit_transform(new_potential['class'])
-# print(new_potential['cat_class'])
 
-# for i in new_potential['cat_class']:
-#     if i ==1:
-#         print(i)
+
+file = open("classes2.txt","w")
+file.write('ID'+' '+'Class'+'\n')
 for i,c in new_potential.iterrows():
     if c['class']=='>50K':
         high_income=c['class']
+        # print(str(i),high_income)
+        file.write(str(i)+'  '+high_income+'\n')
 
-        print(i,high_income)
     else :
         low_income=c['class']
-        # print(i,low_income)
+        # print(str(i),low_income)
+        file.write(str(i)+'  '+low_income+'\n')
+file.close()
+
 # print(confusion_matrix(y_test, pred))
 # print(classification_report(y_test, pred))
 
@@ -117,7 +119,7 @@ for i,c in new_potential.iterrows():
 # models.append(('CART', DecisionTreeClassifier()))
 # models.append(('NB', GaussianNB()))
 # models.append(('SVM', SVC()))
-# # evaluate each model in turn
+# evaluate each model in turn
 # results = []
 # names = []
 # scoring = 'accuracy'
@@ -147,6 +149,3 @@ for i,c in new_potential.iterrows():
 # plt.show()
 
 
-
-# print(potential['workclass_cat'].head(10))
-# print(current['workclass_cat'].head(10))
